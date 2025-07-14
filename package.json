@@ -1,0 +1,21 @@
+{
+  "name": "looplia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Looplia — an AI‑powered personal content agent that automates media creation and scheduling with human‑in‑the‑loop validation and long‑term memory feedback",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "packageManager": "pnpm@10.12.4",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
