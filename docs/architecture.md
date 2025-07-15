@@ -80,6 +80,41 @@ This architecture implements a **hybrid microservices approach** that combines t
 - **Turborepo**: Task orchestration and caching across packages
 - **Benefits**: Shared dependencies, atomic commits, consistent tooling
 
+#### Turborepo Integration Benefits
+
+**Single Command Development:**
+- `turbo dev` starts all apps in parallel
+- Automatic dependency tracking between packages
+- Efficient caching and task orchestration
+- Better development experience with parallel execution
+
+**Task Pipeline Configuration:**
+```json
+// turbo.json
+{
+  "pipeline": {
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", "dist/**"]
+    },
+    "deploy": {
+      "dependsOn": ["build"]
+    }
+  }
+}
+```
+
+**Workspace Management:**
+- Each worker is an independent app under `apps/`
+- Clean workspace references with `workspace:*` protocol
+- Independent deployment and scaling capabilities
+- Team autonomy with clear ownership boundaries
+
 ## Monorepo Structure
 
 ### Directory Layout
@@ -87,36 +122,57 @@ This architecture implements a **hybrid microservices approach** that combines t
 ```
 project-root/
 ├── apps/
-│   ├── web/                    # TanStack Start application
+│   ├── web/                              # TanStack Start application
 │   │   ├── src/
-│   │   │   ├── routes/         # File-based routing
-│   │   │   ├── components/     # React components
-│   │   │   └── utils/          # Web-specific utilities
-│   │   ├── wrangler.jsonc      # Cloudflare configuration
-│   │   ├── vite.config.ts      # Build configuration
+│   │   │   ├── routes/                   # File-based routing
+│   │   │   ├── components/               # React components
+│   │   │   └── utils/                    # Web-specific utilities
+│   │   ├── wrangler.jsonc                # Cloudflare configuration
+│   │   ├── vite.config.ts                # Build configuration
 │   │   └── package.json
-│   └── workers/                # Microservice workers
-│       ├── data-processor/     # Example: Data processing worker
-│       │   ├── src/
-│       │   │   └── index.ts    # Worker entrypoint
-│       │   ├── wrangler.jsonc
-│       │   └── package.json
-│       ├── ml-engine/          # Example: ML inference worker
-│       └── api-gateway/        # Example: External API aggregation
+│   ├── worker-data-processor/            # Data processing worker
+│   │   ├── src/
+│   │   │   └── index.ts                  # Worker entrypoint
+│   │   ├── wrangler.jsonc
+│   │   ├── package.json
+│   │   └── turbo.json                    # Worker-specific Turbo config
+│   ├── worker-ml-engine/                 # ML inference worker
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   ├── wrangler.jsonc
+│   │   ├── package.json
+│   │   └── turbo.json
+│   ├── worker-api-gateway/               # External API aggregation
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   ├── wrangler.jsonc
+│   │   ├── package.json
+│   │   └── turbo.json
+│   └── worker-content-planning-agent/    # AI agent for content planning
+│       ├── src/
+│       │   ├── index.ts                  # ContentPlanningAgentEntrypoint
+│       │   ├── conversation.ts           # Conversation flow logic
+│       │   ├── story-generator.ts        # User story map generation
+│       │   └── types.ts                  # Worker-specific types
+│       ├── wrangler.jsonc
+│       ├── package.json
+│       └── turbo.json
 ├── packages/
-│   ├── shared-types/           # TypeScript type definitions
+│   ├── shared-types/                     # TypeScript type definitions
 │   │   ├── src/
-│   │   │   ├── api.ts          # API interfaces
-│   │   │   ├── domain.ts       # Domain objects
-│   │   │   └── events.ts       # Event schemas
+│   │   │   ├── api.ts                    # API interfaces
+│   │   │   ├── domain.ts                 # Domain objects
+│   │   │   ├── events.ts                 # Event schemas
+│   │   │   └── content-planning.ts       # Content planning interfaces
 │   │   └── package.json
-│   ├── shared-utils/           # Common utilities
-│   └── config/                 # Shared configurations
-├── scripts/                    # Development and deployment scripts
-│   ├── dev.js                  # Multi-worker development
-│   └── deploy.js               # Coordinated deployment
-├── docs/                       # Documentation
-└── package.json                # Root workspace configuration
+│   ├── shared-utils/                     # Common utilities
+│   └── config/                           # Shared configurations
+├── scripts/                              # Development and deployment scripts
+│   ├── dev.js                            # Multi-worker development (legacy)
+│   └── deploy.js                         # Coordinated deployment
+├── docs/                                 # Documentation
+├── turbo.json                            # Root Turborepo configuration
+└── package.json                          # Root workspace configuration
 ```
 
 ### Package Configuration
@@ -124,20 +180,23 @@ project-root/
 **Root package.json:**
 ```json
 {
-  "name": "project-monorepo",
+  "name": "looplia-monorepo",
   "private": true,
   "workspaces": [
     "apps/*",
-    "apps/workers/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "node scripts/dev.js",
-    "dev:web": "cd apps/web && pnpm dev",
-    "dev:multi": "wrangler dev -c apps/web/wrangler.jsonc -c apps/workers/*/wrangler.jsonc",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:workers": "turbo dev --filter='worker-*'",
     "build": "turbo build",
-    "deploy": "node scripts/deploy.js",
-    "type-check": "turbo type-check"
+    "deploy": "turbo deploy",
+    "type-check": "turbo type-check",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "latest"
   }
 }
 ```
@@ -190,11 +249,44 @@ export interface MLEngineAPI {
 
 ### Multi-Worker Development
 
-#### Option 1: Single Command (Recommended)
+#### Option 1: Turborepo Parallel Development (Recommended)
 
 ```bash
-# Start all workers in one command
-npx wrangler dev -c apps/web/wrangler.jsonc -c apps/workers/data-processor/wrangler.jsonc -c apps/workers/ml-engine/wrangler.jsonc
+# Start all apps with Turborepo - includes web + all workers
+turbo dev
+
+# This automatically starts:
+# - apps/web (TanStack Start dev server)
+# - apps/worker-data-processor (Wrangler dev)
+# - apps/worker-ml-engine (Wrangler dev)
+# - apps/worker-content-planning-agent (Wrangler dev)
+```
+
+**Benefits:**
+- Single command starts everything
+- Automatic dependency tracking
+- Parallel execution with proper logging
+- Service bindings work automatically
+- Efficient task caching
+- Better development experience
+
+**Individual App Development:**
+```bash
+# Start only the web app
+turbo dev --filter=web
+
+# Start only workers
+turbo dev --filter='worker-*'
+
+# Start specific worker
+turbo dev --filter=worker-content-planning-agent
+```
+
+#### Option 2: Legacy Wrangler Multi-Config
+
+```bash
+# Start all workers in one wrangler command
+npx wrangler dev -c apps/web/wrangler.jsonc -c apps/worker-data-processor/wrangler.jsonc -c apps/worker-ml-engine/wrangler.jsonc
 ```
 
 **Benefits:**
@@ -202,25 +294,17 @@ npx wrangler dev -c apps/web/wrangler.jsonc -c apps/workers/data-processor/wrang
 - Single terminal to manage
 - Proper binding status display
 
-**Console Output:**
-```
-Your worker has access to the following bindings:
-- Services:
-  - DATA_PROCESSOR: data-processor [connected]
-  - ML_ENGINE: ml-engine [connected]
-```
-
-#### Option 2: Multiple Terminals
+#### Option 3: Multiple Terminals
 
 ```bash
 # Terminal 1 - Web application
 cd apps/web && pnpm dev
 
 # Terminal 2 - Data processor
-cd apps/workers/data-processor && npx wrangler dev --port 8788
+cd apps/worker-data-processor && wrangler dev --port 8788
 
 # Terminal 3 - ML engine
-cd apps/workers/ml-engine && npx wrangler dev --port 8789
+cd apps/worker-ml-engine && wrangler dev --port 8789
 ```
 
 **Benefits:**
@@ -228,7 +312,9 @@ cd apps/workers/ml-engine && npx wrangler dev --port 8789
 - Individual hot reload
 - Team autonomy
 
-#### Option 3: Orchestrated Development
+#### Option 4: Custom Orchestrated Development (Legacy)
+
+**Note**: This approach is superseded by Turborepo but included for reference.
 
 **scripts/dev.js:**
 ```javascript
@@ -244,18 +330,25 @@ const workers = [
     color: '\x1b[36m' // Cyan
   },
   { 
-    name: 'data-processor', 
+    name: 'worker-data-processor', 
     cmd: 'wrangler', 
     args: ['dev', '--port', '8788'], 
-    cwd: 'apps/workers/data-processor',
+    cwd: 'apps/worker-data-processor',
     color: '\x1b[33m' // Yellow
   },
   { 
-    name: 'ml-engine', 
+    name: 'worker-ml-engine', 
     cmd: 'wrangler', 
     args: ['dev', '--port', '8789'], 
-    cwd: 'apps/workers/ml-engine',
+    cwd: 'apps/worker-ml-engine',
     color: '\x1b[35m' // Magenta
+  },
+  { 
+    name: 'worker-content-planning-agent', 
+    cmd: 'wrangler', 
+    args: ['dev', '--port', '8790'], 
+    cwd: 'apps/worker-content-planning-agent',
+    color: '\x1b[32m' // Green
   }
 ];
 
@@ -306,7 +399,7 @@ export default {
 
 **Use Case**: Type-safe method calls, complex data processing
 
-**Worker Implementation (apps/workers/data-processor/src/index.ts):**
+**Worker Implementation (apps/worker-data-processor/src/index.ts):**
 ```typescript
 import { ProcessingRequest, ProcessingResult, DataProcessorAPI } from '@project/shared-types';
 
@@ -337,10 +430,10 @@ export class DataProcessorEntrypoint extends WorkerEntrypoint<Env> implements Da
 export default DataProcessorEntrypoint;
 ```
 
-**Worker Configuration (apps/workers/data-processor/wrangler.jsonc):**
+**Worker Configuration (apps/worker-data-processor/wrangler.jsonc):**
 ```jsonc
 {
-  "name": "data-processor",
+  "name": "worker-data-processor",
   "main": "src/index.ts",
   "compatibility_date": "2024-11-13",
   "compatibility_flags": ["nodejs_compat"]
@@ -386,7 +479,7 @@ export const processData = createServerFn()
   "services": [
     {
       "binding": "DATA_PROCESSOR",
-      "service": "data-processor",
+      "service": "worker-data-processor",
       "entrypoint": "DataProcessorEntrypoint"
     }
   ]
@@ -428,9 +521,14 @@ export const processDataWithFallback = createServerFn()
 Workers must be deployed in dependency order:
 
 ```bash
+# Option 1: Use Turborepo (Recommended)
+turbo deploy
+
+# Option 2: Manual deployment in dependency order
 # 1. Deploy dependencies first (workers without service bindings)
-wrangler deploy --config apps/workers/data-processor/wrangler.jsonc
-wrangler deploy --config apps/workers/ml-engine/wrangler.jsonc
+wrangler deploy --config apps/worker-data-processor/wrangler.jsonc
+wrangler deploy --config apps/worker-ml-engine/wrangler.jsonc
+wrangler deploy --config apps/worker-content-planning-agent/wrangler.jsonc
 
 # 2. Deploy dependents (workers with service bindings)
 wrangler deploy --config apps/web/wrangler.jsonc
@@ -445,8 +543,9 @@ const path = require('path');
 
 const deploymentOrder = [
   // Phase 1: Independent workers
-  'apps/workers/data-processor',
-  'apps/workers/ml-engine',
+  'apps/worker-data-processor',
+  'apps/worker-ml-engine',
+  'apps/worker-content-planning-agent',
   
   // Phase 2: Dependent workers
   'apps/web'
@@ -499,7 +598,7 @@ deploy().catch(console.error);
       "services": [
         {
           "binding": "DATA_PROCESSOR", 
-          "service": "data-processor-staging"
+          "service": "worker-data-processor-staging"
         }
       ]
     }
@@ -528,8 +627,8 @@ jobs:
           node-version: 18
           
       - run: pnpm install
-      - run: pnpm build
-      - run: pnpm deploy
+      - run: turbo build
+      - run: turbo deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 ```
@@ -653,9 +752,10 @@ export default {
 ```typescript
 // packages/shared-types/src/workers.ts
 export interface WorkerRegistry {
-  'data-processor': DataProcessorAPI;
-  'ml-engine': MLEngineAPI;
-  'notification-service': NotificationAPI;
+  'worker-data-processor': DataProcessorAPI;
+  'worker-ml-engine': MLEngineAPI;
+  'worker-notification-service': NotificationAPI;
+  'worker-content-planning-agent': ContentPlanningAPI;
 }
 
 // Type-safe environment
@@ -694,7 +794,7 @@ export class DataProcessorEntrypoint extends BaseWorkerEntrypoint<Env> {
 #### 1. Unit Testing Workers
 
 ```typescript
-// apps/workers/data-processor/test/index.test.ts
+// apps/worker-data-processor/test/index.test.ts
 import { DataProcessorEntrypoint } from '../src/index';
 
 describe('DataProcessorEntrypoint', () => {
@@ -727,12 +827,12 @@ describe('Service Binding Integration', () => {
           name: 'web',
           scriptPath: 'apps/web/dist/index.js',
           serviceBindings: {
-            'DATA_PROCESSOR': 'data-processor'
+            'DATA_PROCESSOR': 'worker-data-processor'
           }
         },
         {
-          name: 'data-processor',
-          scriptPath: 'apps/workers/data-processor/dist/index.js'
+          name: 'worker-data-processor',
+          scriptPath: 'apps/worker-data-processor/dist/index.js'
         }
       ]
     });
