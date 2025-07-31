@@ -1,7 +1,8 @@
 import { Card } from '@/components/ui/card'
-import { MockNewsItem } from '@/data/mockNews'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
+
+import type { MockNewsItem } from '@/data/mockNews'
 
 interface NewsCardProps {
 	item: MockNewsItem
@@ -9,7 +10,7 @@ interface NewsCardProps {
 	onShare?: (id: string) => void
 }
 
-export function NewsCard({ item, onSave, onShare }: NewsCardProps) {
+export function NewsCard({ item, onSave: _onSave, onShare: _onShare }: NewsCardProps) {
 	const [isHovered, setIsHovered] = useState(false)
 
 	const getContentQualityColor = (score: number) => {

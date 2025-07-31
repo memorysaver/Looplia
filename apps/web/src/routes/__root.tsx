@@ -4,7 +4,7 @@ import { NotFound } from '@/components/NotFound'
 import { TRPCProvider } from '@/components/TRPCProvider'
 import appCss from '@/styles/app.css?url'
 import { seo } from '@/utils/seo'
-import { createRootRoute, HeadContent, Link, Scripts } from '@tanstack/react-router'
+import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import * as React from 'react'
 

@@ -1,7 +1,9 @@
-import { ReactNode, useState } from 'react'
+import { useState } from 'react'
 
 import { CleanHeader } from './CleanHeader'
 import { IconSidebar } from './IconSidebar'
+
+import type { ReactNode } from 'react'
 
 interface NewsLayoutProps {
 	children: ReactNode | ((props: { searchQuery: string }) => ReactNode)

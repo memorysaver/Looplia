@@ -32,7 +32,7 @@ export const fetchPosts = createServerFn().handler(async () => {
 		throw new Error('Failed to fetch posts')
 	}
 
-	const posts = (await res.json()) as Array<PostType>
+	const posts = (await res.json()) as PostType[]
 
 	return posts.slice(0, 10)
 })

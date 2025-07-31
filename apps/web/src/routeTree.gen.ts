@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 // @ts-nocheck
 
 // noinspection JSUnusedGlobalSymbols
@@ -11,180 +9,169 @@
 import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrpcDemoRouteImport } from './routes/trpc-demo'
-import { Route as LoginDemoRouteImport } from './routes/login-demo'
-import { Route as LandingDemoRouteImport } from './routes/landing-demo'
+import { ServerRoute as ApiTrpcSplatServerRouteImport } from './routes/api/trpc/$'
 import { Route as DashboardDemoRouteImport } from './routes/dashboard-demo'
 import { Route as IndexRouteImport } from './routes/index'
-import { ServerRoute as ApiTrpcSplatServerRouteImport } from './routes/api/trpc/$'
+import { Route as LandingDemoRouteImport } from './routes/landing-demo'
+import { Route as LoginDemoRouteImport } from './routes/login-demo'
+import { Route as TrpcDemoRouteImport } from './routes/trpc-demo'
 
 const rootServerRouteImport = createServerRootRoute()
 
 const TrpcDemoRoute = TrpcDemoRouteImport.update({
-  id: '/trpc-demo',
-  path: '/trpc-demo',
-  getParentRoute: () => rootRouteImport,
+	id: '/trpc-demo',
+	path: '/trpc-demo',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const LoginDemoRoute = LoginDemoRouteImport.update({
-  id: '/login-demo',
-  path: '/login-demo',
-  getParentRoute: () => rootRouteImport,
+	id: '/login-demo',
+	path: '/login-demo',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const LandingDemoRoute = LandingDemoRouteImport.update({
-  id: '/landing-demo',
-  path: '/landing-demo',
-  getParentRoute: () => rootRouteImport,
+	id: '/landing-demo',
+	path: '/landing-demo',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardDemoRoute = DashboardDemoRouteImport.update({
-  id: '/dashboard-demo',
-  path: '/dashboard-demo',
-  getParentRoute: () => rootRouteImport,
+	id: '/dashboard-demo',
+	path: '/dashboard-demo',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
+	id: '/',
+	path: '/',
+	getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTrpcSplatServerRoute = ApiTrpcSplatServerRouteImport.update({
-  id: '/api/trpc/$',
-  path: '/api/trpc/$',
-  getParentRoute: () => rootServerRouteImport,
+	id: '/api/trpc/$',
+	path: '/api/trpc/$',
+	getParentRoute: () => rootServerRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard-demo': typeof DashboardDemoRoute
-  '/landing-demo': typeof LandingDemoRoute
-  '/login-demo': typeof LoginDemoRoute
-  '/trpc-demo': typeof TrpcDemoRoute
+	'/': typeof IndexRoute
+	'/dashboard-demo': typeof DashboardDemoRoute
+	'/landing-demo': typeof LandingDemoRoute
+	'/login-demo': typeof LoginDemoRoute
+	'/trpc-demo': typeof TrpcDemoRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboard-demo': typeof DashboardDemoRoute
-  '/landing-demo': typeof LandingDemoRoute
-  '/login-demo': typeof LoginDemoRoute
-  '/trpc-demo': typeof TrpcDemoRoute
+	'/': typeof IndexRoute
+	'/dashboard-demo': typeof DashboardDemoRoute
+	'/landing-demo': typeof LandingDemoRoute
+	'/login-demo': typeof LoginDemoRoute
+	'/trpc-demo': typeof TrpcDemoRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/dashboard-demo': typeof DashboardDemoRoute
-  '/landing-demo': typeof LandingDemoRoute
-  '/login-demo': typeof LoginDemoRoute
-  '/trpc-demo': typeof TrpcDemoRoute
+	__root__: typeof rootRouteImport
+	'/': typeof IndexRoute
+	'/dashboard-demo': typeof DashboardDemoRoute
+	'/landing-demo': typeof LandingDemoRoute
+	'/login-demo': typeof LoginDemoRoute
+	'/trpc-demo': typeof TrpcDemoRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboard-demo'
-    | '/landing-demo'
-    | '/login-demo'
-    | '/trpc-demo'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard-demo' | '/landing-demo' | '/login-demo' | '/trpc-demo'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboard-demo'
-    | '/landing-demo'
-    | '/login-demo'
-    | '/trpc-demo'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath
+	fullPaths: '/' | '/dashboard-demo' | '/landing-demo' | '/login-demo' | '/trpc-demo'
+	fileRoutesByTo: FileRoutesByTo
+	to: '/' | '/dashboard-demo' | '/landing-demo' | '/login-demo' | '/trpc-demo'
+	id: '__root__' | '/' | '/dashboard-demo' | '/landing-demo' | '/login-demo' | '/trpc-demo'
+	fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardDemoRoute: typeof DashboardDemoRoute
-  LandingDemoRoute: typeof LandingDemoRoute
-  LoginDemoRoute: typeof LoginDemoRoute
-  TrpcDemoRoute: typeof TrpcDemoRoute
+	IndexRoute: typeof IndexRoute
+	DashboardDemoRoute: typeof DashboardDemoRoute
+	LandingDemoRoute: typeof LandingDemoRoute
+	LoginDemoRoute: typeof LoginDemoRoute
+	TrpcDemoRoute: typeof TrpcDemoRoute
 }
 export interface FileServerRoutesByFullPath {
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
+	'/api/trpc/$': typeof ApiTrpcSplatServerRoute
 }
 export interface FileServerRoutesByTo {
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
+	'/api/trpc/$': typeof ApiTrpcSplatServerRoute
 }
 export interface FileServerRoutesById {
-  __root__: typeof rootServerRouteImport
-  '/api/trpc/$': typeof ApiTrpcSplatServerRoute
+	__root__: typeof rootServerRouteImport
+	'/api/trpc/$': typeof ApiTrpcSplatServerRoute
 }
 export interface FileServerRouteTypes {
-  fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/trpc/$'
-  fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/trpc/$'
-  id: '__root__' | '/api/trpc/$'
-  fileServerRoutesById: FileServerRoutesById
+	fileServerRoutesByFullPath: FileServerRoutesByFullPath
+	fullPaths: '/api/trpc/$'
+	fileServerRoutesByTo: FileServerRoutesByTo
+	to: '/api/trpc/$'
+	id: '__root__' | '/api/trpc/$'
+	fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
-  ApiTrpcSplatServerRoute: typeof ApiTrpcSplatServerRoute
+	ApiTrpcSplatServerRoute: typeof ApiTrpcSplatServerRoute
 }
 
 declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/trpc-demo': {
-      id: '/trpc-demo'
-      path: '/trpc-demo'
-      fullPath: '/trpc-demo'
-      preLoaderRoute: typeof TrpcDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login-demo': {
-      id: '/login-demo'
-      path: '/login-demo'
-      fullPath: '/login-demo'
-      preLoaderRoute: typeof LoginDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/landing-demo': {
-      id: '/landing-demo'
-      path: '/landing-demo'
-      fullPath: '/landing-demo'
-      preLoaderRoute: typeof LandingDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard-demo': {
-      id: '/dashboard-demo'
-      path: '/dashboard-demo'
-      fullPath: '/dashboard-demo'
-      preLoaderRoute: typeof DashboardDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
+	interface FileRoutesByPath {
+		'/trpc-demo': {
+			id: '/trpc-demo'
+			path: '/trpc-demo'
+			fullPath: '/trpc-demo'
+			preLoaderRoute: typeof TrpcDemoRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/login-demo': {
+			id: '/login-demo'
+			path: '/login-demo'
+			fullPath: '/login-demo'
+			preLoaderRoute: typeof LoginDemoRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/landing-demo': {
+			id: '/landing-demo'
+			path: '/landing-demo'
+			fullPath: '/landing-demo'
+			preLoaderRoute: typeof LandingDemoRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/dashboard-demo': {
+			id: '/dashboard-demo'
+			path: '/dashboard-demo'
+			fullPath: '/dashboard-demo'
+			preLoaderRoute: typeof DashboardDemoRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+		'/': {
+			id: '/'
+			path: '/'
+			fullPath: '/'
+			preLoaderRoute: typeof IndexRouteImport
+			parentRoute: typeof rootRouteImport
+		}
+	}
 }
 declare module '@tanstack/react-start/server' {
-  interface ServerFileRoutesByPath {
-    '/api/trpc/$': {
-      id: '/api/trpc/$'
-      path: '/api/trpc/$'
-      fullPath: '/api/trpc/$'
-      preLoaderRoute: typeof ApiTrpcSplatServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-  }
+	interface ServerFileRoutesByPath {
+		'/api/trpc/$': {
+			id: '/api/trpc/$'
+			path: '/api/trpc/$'
+			fullPath: '/api/trpc/$'
+			preLoaderRoute: typeof ApiTrpcSplatServerRouteImport
+			parentRoute: typeof rootServerRouteImport
+		}
+	}
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  DashboardDemoRoute: DashboardDemoRoute,
-  LandingDemoRoute: LandingDemoRoute,
-  LoginDemoRoute: LoginDemoRoute,
-  TrpcDemoRoute: TrpcDemoRoute,
+	IndexRoute: IndexRoute,
+	DashboardDemoRoute: DashboardDemoRoute,
+	LandingDemoRoute: LandingDemoRoute,
+	LoginDemoRoute: LoginDemoRoute,
+	TrpcDemoRoute: TrpcDemoRoute,
 }
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiTrpcSplatServerRoute: ApiTrpcSplatServerRoute,
+	ApiTrpcSplatServerRoute: ApiTrpcSplatServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
-  ._addFileChildren(rootServerRouteChildren)
-  ._addFileTypes<FileServerRouteTypes>()
+	._addFileChildren(rootServerRouteChildren)
+	._addFileTypes<FileServerRouteTypes>()

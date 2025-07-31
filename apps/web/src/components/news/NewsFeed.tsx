@@ -1,9 +1,11 @@
-import { mockNewsData, MockNewsItem } from '@/data/mockNews'
+import { mockNewsData } from '@/data/mockNews'
 import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { MasonryGrid } from './MasonryGrid'
 import { NewsCard } from './NewsCard'
+
+import type { MockNewsItem } from '@/data/mockNews'
 
 interface NewsFeedProps {
 	searchQuery?: string

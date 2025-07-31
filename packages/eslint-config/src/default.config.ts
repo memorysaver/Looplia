@@ -30,6 +30,9 @@ export function getConfig(importMetaUrl: string) {
 				'eslint.config.ts',
 				'**/eslint.config.ts',
 				'**/worker-configuration.d.ts',
+				'**/.nitro/**',
+				'**/.output/**',
+				'**/.tanstack/**',
 			],
 		},
 
