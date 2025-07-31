@@ -82,7 +82,7 @@ graph TB
     LLM_WORKER --> D1
     NOTIFY_WORKER --> D1
     AUTH_WORKER --> D1
-    
+
     API_WORKER --> KV
     AUTH_WORKER --> KV
     NOTIFY_WORKER --> R2
@@ -109,26 +109,31 @@ graph TB
 ### Communication Patterns
 
 #### Service Bindings (Synchronous)
+
 - **API Gateway ↔ Auth Service**: JWT validation and user authentication
 - **API Gateway ↔ RSS Service**: Direct RSS subscription management
 - **RSS Service ↔ Content Processor**: Immediate content normalization
 - **Content Processor ↔ LLM Evaluator**: Real-time quality scoring
 
 #### Queues (Asynchronous)
+
 - **RSS Processing Queue**: Batch RSS content for efficient processing
 - **Content Analysis Queue**: Queue content for LLM evaluation
 - **Notification Queue**: Deliver notifications without blocking main flow
 
 #### Workflows (Orchestration)
+
 - **RSS Pipeline**: Coordinate entire RSS-to-notification flow
 - **Error Handling**: Automatic retry with exponential backoff
 - **Batch Optimization**: Collect and process content in efficient batches
 
 ## Current State Analysis
+
 - **Existing**: Web Frontend in `apps/web` with mock data
 - **Target**: Microservices architecture with shared database, RSS processing pipeline, and workflow orchestration
 
 ## Enhanced Turborepo Structure
+
 ```
 looplia/
 ├── apps/
@@ -164,7 +169,7 @@ looplia/
   "private": true,
   "workspaces": [
     "apps/*",
-    "apps/workers/*", 
+    "apps/workers/*",
     "apps/workflows/*",
     "packages/*"
   ],
@@ -172,7 +177,7 @@ looplia/
     "dev": "turbo run dev",
     "build": "turbo run build",
     "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate", 
+    "db:migrate": "turbo run db:migrate",
     "deploy:workers": "turbo run deploy --filter='./apps/workers/*'",
     "deploy:workflows": "turbo run deploy --filter='./apps/workflows/*'",
     "deploy:all": "pnpm run build && pnpm run deploy:workers && pnpm run deploy:workflows"
@@ -223,26 +228,36 @@ looplia/
 ## 1. Shared Database Package (`packages/database`)
 
 ### Database Schema (Drizzle)
+
 ```typescript
 // Users table
-users: { id, email, preferences, quota_used, created_at }
+users: {
+  ;(id, email, preferences, quota_used, created_at)
+}
 
 // RSS subscriptions per user
-rss_subscriptions: { id, user_id, rsshub_route, filters, active, created_at }
+rss_subscriptions: {
+  ;(id, user_id, rsshub_route, filters, active, created_at)
+}
 
 // Processed content with AI scores
-content_items: { id, url, title, excerpt, source, rsshub_route, 
-                ai_content_score, fetched_at, processed_at }
+content_items: {
+  ;(id, url, title, excerpt, source, rsshub_route, ai_content_score, fetched_at, processed_at)
+}
 
 // Generated content tracking
-generated_outputs: { id, source_content_id, output_type, 
-                    platform, status, created_at }
+generated_outputs: {
+  ;(id, source_content_id, output_type, platform, status, created_at)
+}
 
 // Processing status and metadata
-processing_status: { id, content_id, status, error_message, attempts }
+processing_status: {
+  ;(id, content_id, status, error_message, attempts)
+}
 ```
 
 ### Configuration Files
+
 - `drizzle.config.ts` - D1 HTTP driver configuration
 - `schema/` - Table definitions and relations
 - `migrations/` - Auto-generated migration files
@@ -250,22 +265,24 @@ processing_status: { id, content_id, status, error_message, attempts }
 
 ```typescript
 // packages/database/drizzle.config.ts
-import type { Config } from 'drizzle-kit'
-
-export default {
-  "schema": "./src/schema/*",
-  "out": "./migrations", 
-  "driver": "d1-http",
-  "dbCredentials": {
-    "accountId": process.env.CLOUDFLARE_ACCOUNT_ID!,
-    "databaseId": process.env.CLOUDFLARE_D1_DATABASE_ID!,
-    "token": process.env.CLOUDFLARE_API_TOKEN!
-  }
-} satisfies Config
 
 // packages/database/src/client.ts
 import { drizzle } from 'drizzle-orm/d1'
+
 import * as schema from './schema'
+
+import type { Config } from 'drizzle-kit'
+
+export default {
+  schema: './src/schema/*',
+  out: './migrations',
+  driver: 'd1-http',
+  dbCredentials: {
+    accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
+    databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID!,
+    token: process.env.CLOUDFLARE_API_TOKEN!,
+  },
+} satisfies Config
 
 export type Database = ReturnType<typeof createDrizzleClient>
 
@@ -280,13 +297,16 @@ export { sql } from 'drizzle-orm'
 ## 2. Microservice Workers Architecture (Hono.js Framework)
 
 ### API Gateway Worker (`apps/workers/api-gateway`)
+
 **Purpose**: Central API router and authentication gateway
+
 - **Framework**: Hono.js with TypeScript
 - **Features**: JWT middleware, CORS handling, rate limiting
 - **Service Bindings**: Direct connections to Auth and RSS services
 - **Routes**: `/api/auth/*`, `/api/rss/*`, `/api/content/*`, `/api/user/*`
 
 **Configuration (`wrangler.jsonc`)**:
+
 ```json
 {
   "name": "api-gateway",
@@ -298,7 +318,7 @@ export { sql } from 'drizzle-orm'
       "service": "auth-service"
     },
     {
-      "binding": "RSS_SERVICE", 
+      "binding": "RSS_SERVICE",
       "service": "rss-fetcher"
     }
   ],
@@ -324,8 +344,8 @@ export { sql } from 'drizzle-orm'
 ```typescript
 // Example Hono.js API Gateway structure
 import { Hono } from 'hono'
-import { jwt } from 'hono/jwt'
 import { cors } from 'hono/cors'
+import { jwt } from 'hono/jwt'
 
 const app = new Hono<{
   Bindings: {
@@ -345,7 +365,9 @@ app.route('/api/content', contentRouter)
 ```
 
 ### RSS Fetcher Worker (`apps/workers/rss-fetcher`)
+
 **Purpose**: Poll RSSHub endpoints and store raw content
+
 - **Framework**: Hono.js with scheduled triggers
 - **Trigger**: Cron schedule (every 15-30 minutes) + Manual API calls
 - **Process**: Query active subscriptions → Call RSSHub → Store raw content → Enqueue for processing
@@ -353,6 +375,7 @@ app.route('/api/content', contentRouter)
 - **Output**: New content records in D1 + Queue messages
 
 **Configuration (`wrangler.jsonc`)**:
+
 ```json
 {
   "name": "rss-fetcher",
@@ -399,22 +422,24 @@ const app = new Hono<{
 
 app.post('/fetch-rss', async (c) => {
   const subscriptions = await getActiveSubscriptions(c.env.DATABASE)
-  
+
   for (const sub of subscriptions) {
     const content = await fetchFromRSSHub(sub.rsshub_route)
     await storeRawContent(c.env.DATABASE, content)
-    
+
     // Use Service Binding for immediate processing
     await c.env.CONTENT_PROCESSOR.fetch('/process', {
       method: 'POST',
-      body: JSON.stringify({ contentId: content.id })
+      body: JSON.stringify({ contentId: content.id }),
     })
   }
 })
 ```
 
 ### Content Processor Worker (`apps/workers/content-processor`)
+
 **Purpose**: Normalize and extract structured data
+
 - **Framework**: Hono.js with queue consumers
 - **Trigger**: Service bindings from RSS Fetcher + Queue consumers
 - **Process**: Parse RSS content → Extract title/excerpt → Deduplicate → Enqueue for LLM
@@ -422,10 +447,11 @@ app.post('/fetch-rss', async (c) => {
 - **Output**: Processed content ready for evaluation
 
 **Configuration (`wrangler.jsonc`)**:
+
 ```json
 {
   "name": "content-processor",
-  "main": "src/index.ts", 
+  "main": "src/index.ts",
   "compatibility_date": "2024-04-01",
   "services": [
     {
@@ -450,7 +476,7 @@ app.post('/fetch-rss', async (c) => {
   },
   "d1_databases": [
     {
-      "binding": "DATABASE", 
+      "binding": "DATABASE",
       "database_name": "looplia-db",
       "database_id": "your-database-id"
     }
@@ -474,10 +500,10 @@ const app = new Hono<{
 app.post('/process', async (c) => {
   const { contentId } = await c.req.json()
   const processed = await processContent(contentId)
-  
+
   // Queue for batch LLM processing
   await c.env.ANALYSIS_QUEUE.send({ contentId: processed.id })
-  
+
   return c.json({ success: true, contentId: processed.id })
 })
 
@@ -487,12 +513,14 @@ export default {
     for (const message of batch.messages) {
       await processContentFromQueue(message.body, env)
     }
-  }
+  },
 }
 ```
 
 ### LLM Evaluator Worker (`apps/workers/llm-evaluator`)
+
 **Purpose**: Score content for AI generation quality using batch processing
+
 - **Framework**: Hono.js with intelligent batching
 - **Trigger**: Queue consumer with batch optimization
 - **Process**: Collect content batches → LLM API call → Score and store → Trigger notifications
@@ -517,24 +545,26 @@ export default {
     // Batch processing for efficiency
     const contentItems = await getBatchContent(batch.messages, env.DATABASE)
     const scores = await evaluateContentBatch(contentItems, env.LLM_API_KEY)
-    
+
     await updateContentScores(scores, env.DATABASE)
-    
+
     // Notify for high-quality content
-    const highQualityContent = scores.filter(s => s.score > 0.8)
+    const highQualityContent = scores.filter((s) => s.score > 0.8)
     for (const content of highQualityContent) {
-      await env.NOTIFY_QUEUE.send({ 
+      await env.NOTIFY_QUEUE.send({
         type: 'high_quality_content',
         contentId: content.id,
-        score: content.score
+        score: content.score,
       })
     }
-  }
+  },
 }
 ```
 
 ### Notification Worker (`apps/workers/notification`)
+
 **Purpose**: Update users with new high-quality content and manage real-time updates
+
 - **Framework**: Hono.js with WebSocket support
 - **Trigger**: Queue from LLM Evaluator + WebSocket connections
 - **Process**: Filter by user preferences → Send notifications → Update frontend
@@ -554,31 +584,36 @@ const app = new Hono<{
   }
 }>()
 
-app.get('/ws', upgradeWebSocket((c) => ({
-  onMessage: async (evt, ws) => {
-    // Handle real-time subscriptions
-  },
-  onClose: () => {
-    // Cleanup connections
-  }
-})))
+app.get(
+  '/ws',
+  upgradeWebSocket((c) => ({
+    onMessage: async (evt, ws) => {
+      // Handle real-time subscriptions
+    },
+    onClose: () => {
+      // Cleanup connections
+    },
+  }))
+)
 
 export default {
   async queue(batch, env) {
     for (const message of batch.messages) {
       const { type, contentId, score } = message.body
-      
+
       if (type === 'high_quality_content') {
         await notifySubscribedUsers(contentId, score, env)
         await updateRealtimeClients(contentId, env)
       }
     }
-  }
+  },
 }
 ```
 
 ### Auth Service Worker (`apps/workers/auth-service`)
+
 **Purpose**: Handle user authentication, authorization, and session management
+
 - **Framework**: Hono.js with JWT middleware
 - **Features**: Login/register, JWT token management, user preferences
 - **Communication**: Service bindings from API Gateway, KV for session storage
@@ -600,14 +635,20 @@ const app = new Hono<{
 app.post('/login', async (c) => {
   const { email, password } = await c.req.json()
   const user = await authenticateUser(email, password, c.env.DATABASE)
-  
+
   if (user) {
-    const token = await sign({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 86400 }, c.env.JWT_SECRET)
-    await c.env.KV.put(`session:${user.id}`, JSON.stringify({ userId: user.id, lastActive: Date.now() }))
-    
+    const token = await sign(
+      { sub: user.id, exp: Math.floor(Date.now() / 1000) + 86400 },
+      c.env.JWT_SECRET
+    )
+    await c.env.KV.put(
+      `session:${user.id}`,
+      JSON.stringify({ userId: user.id, lastActive: Date.now() })
+    )
+
     return c.json({ token, user: { id: user.id, email: user.email } })
   }
-  
+
   return c.json({ error: 'Invalid credentials' }, 401)
 })
 ```
@@ -615,6 +656,7 @@ app.post('/login', async (c) => {
 ## 3. Cloudflare Workflows Orchestration
 
 ### RSS Pipeline Workflow (`apps/workflows/rss-pipeline`)
+
 **Durable Execution Chain with Service Binding Integration**:
 
 ```typescript
@@ -627,7 +669,7 @@ export class RSSPipelineWorkflow extends WorkflowEntrypoint {
     const rssResults = await step.do('fetch-rss-content', async () => {
       const response = await this.env.RSS_FETCHER.fetch('/fetch-rss', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
       return await response.json()
     })
@@ -638,7 +680,7 @@ export class RSSPipelineWorkflow extends WorkflowEntrypoint {
       for (const contentId of rssResults.contentIds) {
         const response = await this.env.CONTENT_PROCESSOR.fetch('/process', {
           method: 'POST',
-          body: JSON.stringify({ contentId })
+          body: JSON.stringify({ contentId }),
         })
         results.push(await response.json())
       }
@@ -651,26 +693,26 @@ export class RSSPipelineWorkflow extends WorkflowEntrypoint {
       for (const content of processedContent) {
         await this.env.ANALYSIS_QUEUE.send({
           contentId: content.contentId,
-          batchId: event.batchId
+          batchId: event.batchId,
         })
       }
-      
+
       // Wait for batch completion (using Durable Object for coordination)
       return await this.waitForBatchCompletion(event.batchId)
     })
 
     // Step 4: Trigger Notifications (Service Binding for immediate user updates)
     await step.do('send-notifications', async () => {
-      const highQualityContent = evaluationResults.filter(c => c.score > 0.8)
-      
+      const highQualityContent = evaluationResults.filter((c) => c.score > 0.8)
+
       for (const content of highQualityContent) {
         await this.env.NOTIFICATION_SERVICE.fetch('/notify', {
           method: 'POST',
           body: JSON.stringify({
             type: 'high_quality_content',
             contentId: content.id,
-            score: content.score
-          })
+            score: content.score,
+          }),
         })
       }
     })
@@ -682,9 +724,9 @@ export class RSSPipelineWorkflow extends WorkflowEntrypoint {
         body: JSON.stringify({
           pipelineRun: event.id,
           contentProcessed: processedContent.length,
-          highQualityCount: evaluationResults.filter(c => c.score > 0.8).length,
-          completedAt: new Date().toISOString()
-        })
+          highQualityCount: evaluationResults.filter((c) => c.score > 0.8).length,
+          completedAt: new Date().toISOString(),
+        }),
       })
     })
   }
@@ -694,12 +736,12 @@ export class RSSPipelineWorkflow extends WorkflowEntrypoint {
     const batchCoordinator = this.env.BATCH_COORDINATOR.get(
       this.env.BATCH_COORDINATOR.idFromName(batchId)
     )
-    
+
     const response = await batchCoordinator.fetch('/wait-completion', {
       method: 'POST',
-      body: JSON.stringify({ batchId })
+      body: JSON.stringify({ batchId }),
     })
-    
+
     return await response.json()
   }
 }
@@ -713,14 +755,15 @@ export default {
       id: workflowId,
       params: {
         batchId: `batch-${Date.now()}`,
-        scheduledAt: new Date().toISOString()
-      }
+        scheduledAt: new Date().toISOString(),
+      },
     })
-  }
+  },
 }
 ```
 
 ### Workflow Benefits with Enhanced Architecture:
+
 - **Service Binding Integration**: Zero-latency communication for immediate processing
 - **Queue Optimization**: Batch processing for cost-effective LLM calls
 - **Durable State**: Automatic retry with exponential backoff and state persistence
@@ -731,7 +774,7 @@ export default {
 
 ### Advanced Workflow Features:
 
-```typescript
+````typescript
 // Enhanced workflow with conditional execution
 export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
   async run(event, step: WorkflowStep) {
@@ -790,7 +833,7 @@ export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
   "private": true,
   "workspaces": [
     "apps/*",
-    "apps/workers/*", 
+    "apps/workers/*",
     "apps/workflows/*",
     "packages/*"
   ],
@@ -798,7 +841,7 @@ export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate", 
+    "db:migrate": "turbo run db:migrate",
     "deploy:workers": "turbo run deploy --filter='./apps/workers/*'",
     "deploy:workflows": "turbo run deploy --filter='./apps/workflows/*'",
     "deploy:all": "pnpm run build && pnpm run deploy:workers && pnpm run deploy:workflows"
@@ -810,9 +853,10 @@ export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
   },
   "packageManager": "pnpm@10.12.4"
 }
-```
+````
 
 ### Turbo.json Configuration
+
 ```json
 {
   "tasks": {
@@ -852,6 +896,7 @@ export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
 ## 6. Development Workflow
 
 ### Setup Process
+
 1. **Create D1 Database**: `wrangler d1 create looplia-db`
 2. **Generate Schemas**: `pnpm db:generate`
 3. **Run Migrations**: `pnpm db:migrate`
@@ -861,6 +906,7 @@ export class ConditionalRSSWorkflow extends WorkflowEntrypoint {
 ### Enhanced Local Development
 
 #### Multi-Worker Development Setup
+
 For local development with service bindings, you'll need to run multiple `wrangler dev` sessions:
 
 ```bash
@@ -868,12 +914,12 @@ For local development with service bindings, you'll need to run multiple `wrangl
 cd apps/workers/auth-service
 wrangler dev --port 8781
 
-# Terminal 2 - RSS Fetcher  
+# Terminal 2 - RSS Fetcher
 cd apps/workers/rss-fetcher
 wrangler dev --port 8782
 
 # Terminal 3 - Content Processor
-cd apps/workers/content-processor  
+cd apps/workers/content-processor
 wrangler dev --port 8783
 
 # Terminal 4 - API Gateway (main entry point)
@@ -882,6 +928,7 @@ wrangler dev --port 8787
 ```
 
 #### Service Binding Status Monitoring
+
 When running `wrangler dev`, you'll see service binding connection status:
 
 ```bash
@@ -890,11 +937,12 @@ Your worker has access to the following bindings:
 - Services:
   - AUTH_SERVICE: auth-service [connected]
   - RSS_SERVICE: rss-fetcher [connected]
-- D1 Databases:  
+- D1 Databases:
   - DATABASE: looplia-db (local)
 ```
 
 #### Alternative: Single Command Multi-Worker Setup
+
 You can also run multiple workers with one command (experimental):
 
 ```bash
@@ -905,6 +953,7 @@ wrangler dev -c apps/workers/api-gateway/wrangler.jsonc \
 ```
 
 #### Development Environment Variables
+
 Create `.dev.vars` files in each worker directory:
 
 ```bash
@@ -912,16 +961,18 @@ Create `.dev.vars` files in each worker directory:
 JWT_SECRET=your-dev-jwt-secret
 ENVIRONMENT=development
 
-# apps/workers/rss-fetcher/.dev.vars  
+# apps/workers/rss-fetcher/.dev.vars
 RSSHUB_BASE_URL=https://rsshub.app
 ```
 
 ### Package Manager
+
 - **Primary**: pnpm for all package installations and management
 - **Workspaces**: Configured for pnpm workspace support
 - **Commands**: All scripts use pnpm instead of npm/yarn
 
 ### Cost Optimization
+
 - **D1**: 100K reads/day free (sufficient for MVP)
 - **Workers**: 100K invocations/month free
 - **Workflows**: Built on Workers, same free tier
@@ -930,21 +981,25 @@ RSSHUB_BASE_URL=https://rsshub.app
 ## 7. Implementation Phases
 
 **Phase 1: Foundation**
+
 - Set up shared database package
 - Create basic D1 schema
 - Update Web Frontend for database integration
 
 **Phase 2: Core Workers**
+
 - Implement RSS Fetcher worker
 - Create Content Processor worker
 - Basic workflow orchestration
 
 **Phase 3: AI Integration**
+
 - Add LLM Evaluator worker
 - Implement content scoring
 - Connect to existing UI
 
 **Phase 4: Production**
+
 - Add monitoring and logging
 - Implement user management
 - Deploy and optimize
@@ -954,28 +1009,33 @@ This architecture provides a scalable, cost-effective foundation for the RSS-pow
 ## 8. Future Plans
 
 ### Advanced Performance Optimizations
+
 - **Smart Placement**: Configure backend workers to run closer to data sources for reduced latency
 - **Advanced Caching**: Implement Cache API strategies for RSS content and KV caching for user sessions
 - **Connection Pooling**: Optimize external API connections and database queries
 
 ### Enhanced Error Handling & Reliability
+
 - **Circuit Breaker Patterns**: Prevent cascading failures when external services are unavailable
 - **Exponential Backoff**: Intelligent retry logic with progressive delays
 - **Dead Letter Queues**: Handle permanently failed messages with proper alerting
 
 ### Security & Monitoring
+
 - **Rate Limiting**: Implement per-user and per-endpoint rate limiting
 - **CORS Policies**: Fine-grained cross-origin resource sharing controls
 - **Observability**: Analytics Engine integration for monitoring and alerting
 - **Health Checks**: Automated endpoint health monitoring
 
 ### Production Deployment
+
 - **Multi-Environment**: Staging and production environment configurations
 - **Blue-Green Deployments**: Zero-downtime deployment strategies
 - **CI/CD Integration**: Automated testing and deployment pipelines
 - **Rollback Strategies**: Automated rollback for failed deployments
 
 ### Advanced Features
+
 - **WebSocket Scaling**: Durable Objects for real-time features
 - **Content Delivery**: R2 integration for media storage and CDN
 - **Analytics**: User behavior tracking and performance metrics
