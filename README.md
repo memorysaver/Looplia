@@ -1,6 +1,7 @@
-# Workers Monorepo Template
+# Looplia
 
-This template provides a fully featured monorepo for managing multiple Cloudflare Workers.
+Looplia — an agentic workflow that automates media content creation with human‑in‑the‑loop validation.
+
 
 ## Quick Start
 
