@@ -2,7 +2,6 @@
 
 Looplia — an agentic workflow that automates media content creation with human‑in‑the‑loop validation.
 
-
 ## Quick Start
 
 You can bootstrap a new monorepo using this template by running:
