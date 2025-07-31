@@ -33,6 +33,7 @@ export function getConfig(importMetaUrl: string) {
 				'**/.nitro/**',
 				'**/.output/**',
 				'**/.tanstack/**',
+				'**/routeTree.gen.ts',
 			],
 		},
 
