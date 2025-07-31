@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config "../../tailwind.config.mjs";
+
+@theme {
+	--radius: 0.5rem;
+}
 
 @layer base {
 	html {
@@ -8,12 +11,13 @@
 	}
 
 	* {
-		@apply border-gray-200 dark:border-gray-800;
+		border-color: hsl(var(--border));
 	}
 
 	html,
 	body {
-		@apply text-gray-900 bg-gray-50 dark:bg-gray-950 dark:text-gray-200;
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
 	}
 
 	.using-mouse * {
@@ -92,10 +96,11 @@
 
 @layer base {
 	* {
-		@apply border-border;
+		border-color: hsl(var(--border));
 	}
 	body {
-		@apply bg-background text-foreground;
+		background-color: hsl(var(--background));
+		color: hsl(var(--foreground));
 	}
 }
 

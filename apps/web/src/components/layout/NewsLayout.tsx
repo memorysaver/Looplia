@@ -4,7 +4,7 @@ import { CleanHeader } from './CleanHeader'
 import { IconSidebar } from './IconSidebar'
 
 interface NewsLayoutProps {
-	children: ReactNode
+	children: ReactNode | ((props: { searchQuery: string }) => ReactNode)
 }
 
 export function NewsLayout({ children }: NewsLayoutProps) {
